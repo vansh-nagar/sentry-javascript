@@ -211,6 +211,7 @@ function createSentryWebpackPlugin(userOptions: SentryWebpackPluginOptions = {})
     ? createComponentNameAnnotateHooks(
         options.reactComponentAnnotation?.ignoredComponents || [],
         !!options.reactComponentAnnotation?._experimentalInjectIntoHtml,
+        { logger },
       )
     : undefined;
 
