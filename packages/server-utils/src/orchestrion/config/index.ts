@@ -21,6 +21,7 @@ import { langchainConfig } from './langchain';
 import { langgraphConfig } from './langgraph';
 import { lruMemoizerConfig } from './lru-memoizer';
 import { mastraConfig } from './mastra';
+import { mcpServerConfig } from './mcp-server';
 import { mistralConfig } from './mistral';
 import { mongodbConfig } from './mongodb';
 import { mongooseConfig } from './mongoose';
@@ -71,6 +72,7 @@ export const SENTRY_INSTRUMENTATIONS: InstrumentationConfig[] = [
   ...langgraphConfig,
   ...lruMemoizerConfig,
   ...mastraConfig,
+  ...mcpServerConfig,
   ...mistralConfig,
   ...mongodbConfig,
   ...mongooseConfig,

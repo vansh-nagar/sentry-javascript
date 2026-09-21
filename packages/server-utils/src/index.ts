@@ -45,6 +45,7 @@ export { langGraphIntegration } from './integrations/langgraph';
 export { createFlueInstrumentation } from './ai/flue';
 export type { FlueOptions } from './ai/flue';
 export { mastraIntegration } from './integrations/mastra';
+export { mcpServerIntegration } from './integrations/mcp-server';
 export { SentryMastraExporter } from './ai/mastra';
 export { lruMemoizerIntegration } from './integrations/lru-memoizer';
 export { mongoIntegration } from './integrations/mongodb';
