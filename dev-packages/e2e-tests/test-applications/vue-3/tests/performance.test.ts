@@ -115,12 +115,12 @@ test('sends a pageload span with a route name as span name if available', async 
     route: '/',
     routeDescription: 'a route with a synchronously mounted component',
     // `HomeView` is missing from `trackComponents`, so the root spans are the only UI spans.
-    expectedUiSpanNames: ['Application Render', 'Vue <Root>'],
+    expectedUiSpanNames: ['Root', 'Root'],
   },
   {
     route: '/components',
     routeDescription: 'a route with an async component',
-    expectedUiSpanNames: ['Application Render', 'Vue <ComponentMainView>', 'Vue <ComponentOneView>', 'Vue <Root>'],
+    expectedUiSpanNames: ['ComponentMainView', 'ComponentOneView', 'Root', 'Root'],
   },
 ].forEach(({ route, routeDescription, expectedUiSpanNames }) => {
   test(`sends an application render span and a root component span on ${routeDescription}`, async ({ page }) => {
@@ -143,21 +143,27 @@ test('sends a pageload span with a route name as span name if available', async 
 
     expect(uiSpans.map(span => span.name).sort()).toEqual(expectedUiSpanNames);
 
-    const applicationRenderSpan = uiSpans.find(span => span.name === 'Application Render');
+    const applicationRenderSpan = uiSpans.find(
+      span => span.name === 'Root' && span.attributes['sentry.op']?.value === 'ui.render',
+    );
     expect(applicationRenderSpan).toMatchObject({
-      name: 'Application Render',
+      name: 'Root',
       attributes: expect.objectContaining({
         'sentry.op': { type: 'string', value: 'ui.render' },
         'sentry.origin': { type: 'string', value: 'auto.ui.vue' },
+        'sentry.description': { type: 'string', value: 'Application Render' },
       }),
     });
 
-    const rootComponentSpan = uiSpans.find(span => span.name === 'Vue <Root>');
+    const rootComponentSpan = uiSpans.find(
+      span => span.name === 'Root' && span.attributes['sentry.op']?.value === 'ui.mount',
+    );
     expect(rootComponentSpan).toMatchObject({
-      name: 'Vue <Root>',
+      name: 'Root',
       attributes: expect.objectContaining({
         'sentry.op': { type: 'string', value: 'ui.mount' },
         'sentry.origin': { type: 'string', value: 'auto.ui.vue' },
+        'sentry.description': { type: 'string', value: 'Vue <Root>' },
       }),
     });
   });
@@ -167,7 +173,7 @@ test('sends a lifecycle span for the root and for each tracked component only', 
   // Vue compiles `app.mixin()` down to a no-op when the Options API is disabled, so the SDK creates no UI spans at all.
   test.fail(OPTIONS_API_DISABLED, 'Vue tracing is registered through app.mixin(), which needs the Options API');
 
-  const expectedUiSpanNames = ['Application Render', 'Vue <ComponentMainView>', 'Vue <ComponentOneView>', 'Vue <Root>'];
+  const expectedUiSpanNames = ['ComponentMainView', 'ComponentOneView', 'Root', 'Root'];
 
   const spansPromise = collectStreamedSpans('vue-3', spans => {
     return (
@@ -202,37 +208,45 @@ test('sends a lifecycle span for the root and for each tracked component only', 
 
   expect(uiSpanNames).toEqual(expectedUiSpanNames);
 
-  const applicationRenderSpan = uiSpans.find(span => span.name === 'Application Render');
+  const applicationRenderSpan = uiSpans.find(
+    span => span.name === 'Root' && span.attributes['sentry.op']?.value === 'ui.render',
+  );
   expect(applicationRenderSpan).toMatchObject({
     attributes: expect.objectContaining({
       'sentry.op': { type: 'string', value: 'ui.render' },
       'sentry.origin': { type: 'string', value: 'auto.ui.vue' },
+      'sentry.description': { type: 'string', value: 'Application Render' },
     }),
   });
 
-  const rootComponentSpan = uiSpans.find(span => span.name === 'Vue <Root>');
+  const rootComponentSpan = uiSpans.find(
+    span => span.name === 'Root' && span.attributes['sentry.op']?.value === 'ui.mount',
+  );
   expect(rootComponentSpan).toMatchObject({
     attributes: expect.objectContaining({
       'sentry.op': { type: 'string', value: 'ui.mount' },
       'sentry.origin': { type: 'string', value: 'auto.ui.vue' },
+      'sentry.description': { type: 'string', value: 'Vue <Root>' },
     }),
   });
 
-  const componentMainViewSpan = uiSpans.find(span => span.name === 'Vue <ComponentMainView>');
+  const componentMainViewSpan = uiSpans.find(span => span.name === 'ComponentMainView');
   expect(componentMainViewSpan).toMatchObject({
     attributes: expect.objectContaining({
       'sentry.op': { type: 'string', value: 'ui.mount' },
       'sentry.origin': { type: 'string', value: 'auto.ui.vue' },
+      'sentry.description': { type: 'string', value: 'Vue <ComponentMainView>' },
     }),
   });
 
-  const componentOneViewSpan = uiSpans.find(span => span.name === 'Vue <ComponentOneView>');
+  const componentOneViewSpan = uiSpans.find(span => span.name === 'ComponentOneView');
   expect(componentOneViewSpan).toMatchObject({
     attributes: expect.objectContaining({
       'sentry.op': { type: 'string', value: 'ui.mount' },
       'sentry.origin': { type: 'string', value: 'auto.ui.vue' },
+      'sentry.description': { type: 'string', value: 'Vue <ComponentOneView>' },
     }),
   });
 
-  expect(uiSpanNames).not.toContain('Vue <ComponentTwoView>');
+  expect(uiSpanNames).not.toContain('ComponentTwoView');
 });
